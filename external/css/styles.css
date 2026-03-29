@@ -1,0 +1,240 @@
+* {
+    font-family: 'Poppins' !important;
+}
+
+.navbar {
+    background-color: #DC143C !important;
+    color: white !important;
+}
+
+.navbar-brand {
+    color: white !important;
+    font-size: 1.em;
+}
+
+.nav-link {
+    color: white !important;
+}
+
+.nav-link:hover {
+    color: #37376d !important;
+}
+
+.logo {
+    background-color: white !important;
+    border-radius: 100%;
+    width: auto;
+    height: 50px;
+}
+
+.voting-landing {
+    background-image: url('../img/wmsu-building.jpg');
+    height: 100vh;
+    background-repeat: no-repeat;
+    background-size: cover;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.voting-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(220, 20, 60, 0.5);
+    /* Crimson red */
+    mix-blend-mode: multiply;
+    /* Crimson red effect */
+    z-index: 1;
+    pointer-events: none;
+    /* Makes sure it doesn’t interfere with content */
+}
+
+.voting-landing-content {
+    position: relative;
+    z-index: 2;
+    /* Text stays above the overlay */
+    color: white;
+
+}
+
+.c-navy {
+    color: #071f8a;
+}
+
+.c-white {
+    color: white !important;
+    mix-blend-mode: normal !important;
+}
+
+.candidate-txt {
+    color: white !important;
+    background-color: #0000ff;
+}
+
+.jtc-btn {
+    margin-top: 25px;
+    background-color: #DC143C;
+    color: white !important;
+    border: none;
+    padding: 10px;
+    font-size: 1rem;
+}
+
+.jtc-btn:hover {
+    transition: margin-left 1s ease, background-color 1s ease, border-radius 1s ease;
+    background-color: #6b192a;
+    border: 1px solid #DC143C;
+    border-radius: 10px;
+
+    .check {
+        margin-left: 15px;
+    }
+}
+
+.vr-btn {
+    margin-top: 25px;
+    background-color: #0a086e;
+    color: white !important;
+    border: none;
+    padding: 10px;
+    font-size: 1rem;
+}
+
+.vr-btn:hover {
+    transition: margin-left 1s ease, background-color 1s ease, border-radius 1s ease;
+    background-color: #0a7eac;
+    border: 1px solid #0a086e;
+    border-radius: 10px;
+
+    .check {
+        margin-left: 15px;
+    }
+}
+
+
+.check {
+    font-size: 1em;
+    margin-left: 10px;
+}
+
+.first-part {
+    margin: 25px;
+    background-color: rgba(255, 255, 255, 0.726);
+    display: flex;
+    align-items: center;
+}
+
+.bold {
+    font-weight: bolder;
+}
+
+.c-red {
+    color: #6b192a;
+}
+
+.small-liner {
+    text-align: center;
+    border-bottom: 4px solid #6b192a;
+    width: 10%;
+}
+
+
+.small-liner-1 {
+    text-align: center;
+    border-bottom: 4px solid #071f8a;
+    width: 10%;
+}
+
+.info-g {
+    height: 300px;
+    width: 100%;
+    object-fit: cover;
+}
+
+.second-part {
+    background-color: #071f8a;
+    color: white;
+    padding: 50px;
+}
+
+.round {
+    border-radius: 100%;
+}
+
+.small {
+    height: 150px;
+    width: 150px
+}
+
+.third-page {
+    background-image: url('../img/Peach\ Ash\ Grey\ Gradient\ Color\ and\ Style\ Video\ Background.png');
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; /* Center content vertically */
+    background-repeat: no-repeat; 
+    background-size: cover;  /* Ensures the image covers the entire page */
+    background-position: center;  /* Centers the image */
+    padding: 50px 0; /* Adds some padding for better spacing */
+}
+
+.linker{
+    color: black !important; 
+    text-decoration: none;
+}
+
+.event-part{
+    background-color: #071f8a;
+    color: white !important;
+}
+
+.small-liner-white {
+    text-align: center;
+    border-bottom: 4px solid white;
+    width: 10%;
+}
+
+.sidebar{
+    height:auto;
+    background-color:#6b192a;
+    padding: 20px;
+}
+
+.btn-primary-self{
+    background-color: #0000ff;
+    color: white;
+    border: 1px solid #0000ff;
+}
+
+.btn-primary-self:hover{
+    border: 1px solid #37376d;
+}
+
+.btn-success-self{
+    background-color: #6b192a;
+    color: white;
+    border: 1px solid #6b192a;
+}
+
+.btn-success-self:hover{
+    border: 1px solid #6b192a;
+}
+
+.article-card{
+    transition: 0.1s ease
+}
+.article-card:hover{
+    border: 1px solid #6b192a;
+}
+
+.bordered-red{
+    border: 2px solid #6b192a !important;
+}
+
+.bordered-black{
+    border: 1px solid black !important;
+}

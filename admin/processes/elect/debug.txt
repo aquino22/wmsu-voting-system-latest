@@ -1,0 +1,10 @@
+Array
+(
+    [election_name] => Test
+    [school_year_start] => 2024
+    [school_year_end] => 2025
+    [semester] => 1st Semester
+    [start_period] => 2025-02-18T12:55
+    [end_period] => 2025-02-27T12:55
+    [formatted_semester] => 1st Semester (2024 - 2025)
+)
