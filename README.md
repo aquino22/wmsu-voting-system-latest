@@ -1,86 +1,50 @@
-🗳️ Voting System Web Application
+<div align="center">
 
-A robust web-based voting system designed for academic institutions. It supports multiple election types, real-time result tracking, revoting for tie-breakers, and comprehensive administrative controls.
+# 🗳️ VOTING SYSTEM / CORE
+**WMSU Academic Election Management Engine**
 
-🚀 Features
-🔐 Authentication & User Management
-Secure login for voters and administrators
-Role-based access (Admin, Voter)
-Bulk voter import system (CSV/manual processing)
-Email notifications with QR codes for verification
-🗳️ Voting System
-Supports multiple election scopes:
-Central Elections
-Local (College-based) Elections
-External / ESU Elections
-Dynamic ballot generation per election
-One vote per voter enforcement
-Precinct-based voter grouping
-Election availability filtering (ongoing only)
-🔄 Revoting System (Tie Resolution)
-Automatic detection of tied candidates
-Creation of revote scenarios
-Controlled voter eligibility for revoting
-Vote status lifecycle:
-Not Voted
-Voted
-Revoted
-Uses tied_candidates mapping for revote tracking
-📊 Results & Analytics
-Real-time vote counting
-Candidate ranking system
-Partylist vote distribution
-Voter turnout statistics
-Visual reports using Chart.js:
-Bar charts
-Pie charts
-Winner summary per position
-Export results to PDF
-📁 File & Document Handling
-PDF generation using TCPDF
-Email delivery via PHPMailer
-QR code generation for voter identification
-🏗️ Tech Stack
+[![PHP](https://img.shields.io/badge/PHP-8.x-777bb4?style=for-the-badge&logo=php)](https://php.net)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql)](https://mysql.com)
+[![License](https://img.shields.io/badge/License-MIT-black?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-Frontend
+---
 
-HTML, CSS, Bootstrap
-JavaScript, jQuery
-Chart.js
+### ⚡ THE STACK
+`Svelte-Inspired Logic` • `PHP PDO` • `Tailwind-Ready CSS` • `Chart.js`
 
-Backend
+</div>
 
-PHP (PDO)
+## 🛸 SYSTEM CAPABILITIES
 
-Database
+<table width="100%">
+  <tr>
+    <td width="50%" valign="top">
+      <h4>🔐 SECURE VOTING</h4>
+      <ul>
+        <li><b>Multi-Tier Scopes:</b> Central, College, and ESU.</li>
+        <li><b>QR Verification:</b> Email-linked identity masking.</li>
+        <li><b>Anti-Fraud:</b> Strict "One-Person, One-Vote."</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top">
+      <h4>🔄 REVOTE ENGINE</h4>
+      <ul>
+        <li><b>Tie-Detection:</b> Auto-mapping of <code>tied_candidates</code>.</li>
+        <li><b>Lifecycle:</b> Not Voted → Voted → Revoted.</li>
+        <li><b>Precision:</b> Targeted voter eligibility.</li>
+      </ul>
+    </td>
+  </tr>
+</table>
 
-MySQL
+## 📊 ANALYTICS & INSIGHTS
+> **Real-time Data Visualization:** High-fidelity Bar and Pie charts for instant winner identification and partylist distribution.
 
-Libraries
+---
 
-PHPMailer
-TCPDF
-QR Code Generator
+## 🛠️ QUICK START
 
-⚙️ Installation
-1. Clone the Repository
-2. Setup Environment
-Install XAMPP / LAMP / WAMP
-
-Move project to:
-
-htdocs/voting-system
-3. Configure Database
-Create a MySQL database
-Import the provided .sqls file such as wmsu_voting_system and wmsu_voting_system_archived
-Update config.php:
-$host = 'localhost';
-$db   = 'wmsu_voting_system';
-$user = 'root';
-$pass = '';
-4. Install Dependencies
+### 1. Clone & Prep
+```bash
+git clone [https://github.com/irene23/voting-system.git](https://github.com/username/voting-system.git)
 composer install
-5. Run the Project
-Start Apache and MySQL
-Open in browser:
-http://localhost/voting-system
