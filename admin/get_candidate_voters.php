@@ -24,6 +24,15 @@ if (!$candidate_id || !$voting_period_id) {
     exit();
 }
 
+$stmt = $pdo->prepare("
+    SELECT re_start_period, re_end_period
+    FROM archived_voting_periods
+    WHERE id = ?
+");
+$stmt->execute([$voting_period_id]);
+$votingPeriod = $stmt->fetch(PDO::FETCH_ASSOC);
+$hasOfficialRevote = !empty($votingPeriod['re_start_period']) && !empty($votingPeriod['re_end_period']);
+
 // ----------------------------------------------------------------
 // Build lookup maps from archive DB
 // ----------------------------------------------------------------
@@ -76,17 +85,22 @@ foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
 // Fetch student_ids who voted for this candidate from main DB
 // ----------------------------------------------------------------
 $stmt = $pdo->prepare("
-    SELECT student_id
+    SELECT student_id, COUNT(*) AS vote_count
     FROM archived_votes
     WHERE candidate_id = ? AND voting_period_id = ?
+    GROUP BY student_id
+    ORDER BY vote_count DESC
 ");
 $stmt->execute([$candidate_id, $voting_period_id]);
-$voterStudentIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-if (empty($voterStudentIds)) {
-    echo '<p class="text-muted text-center mt-3">No voters found for this candidate.</p>';
-    exit();
+$voteCountMap    = [];   // student_id => how many times they voted for this candidate
+$voterStudentIds = [];
+foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+    $voterStudentIds[]                  = $row['student_id'];
+    $voteCountMap[$row['student_id']]   = (int)$row['vote_count'];
 }
+
+$duplicateVoterCount = count(array_filter($voteCountMap, fn($c) => $c > 1));
+$hasDataDrivenRevote = $duplicateVoterCount > 0;
 
 // ----------------------------------------------------------------
 // Fetch voter details from archive DB using student IDs
@@ -150,6 +164,7 @@ foreach ($voters as $voter) {
         'year_level'  => $yearLevelName,
         'major'       => $majorName,
         'precinct'    => htmlspecialchars($voter['precinct_name'] ?? '—'),
+        'vote_count'  => $voteCountMap[$voter['student_id']] ?? 1,
     ];
 }
 
@@ -203,9 +218,37 @@ ksort($groupedByCollege); // Sort colleges alphabetically
         font-size: .8rem;
     }
 </style>
-<div class="mb-2 d-flex align-items-center gap-2">
+<div class="mb-3 d-flex align-items-center gap-2">
     <span class="badge" style="background:#B22222;"><?php echo count($voters); ?> voter(s) found</span>
+    <?php if ($duplicateVoterCount > 0): ?>
+        <span class="badge bg-warning text-dark">
+            <i class="mdi mdi-alert me-1"></i><?php echo $duplicateVoterCount; ?> voter(s) voted more than once
+        </span>
+    <?php endif; ?>
 </div>
+
+<?php if ($hasOfficialRevote || $hasDataDrivenRevote): ?>
+    <div class="alert alert-warning d-flex gap-3 align-items-start py-2 px-3 mb-3" style="border-left: 4px solid #e6a817; font-size:.85rem;">
+        <i class="mdi mdi-reload mdi-24px mt-1 text-warning"></i>
+        <div>
+            <strong>Re-voting detected for this election period.</strong><br>
+            <?php if ($hasOfficialRevote): ?>
+                <span class="text-muted">
+                    Official re-vote window:
+                    <strong><?php echo date('M d, Y g:i A', strtotime($votingPeriod['re_start_period'])); ?></strong>
+                    &ndash;
+                    <strong><?php echo date('M d, Y g:i A', strtotime($votingPeriod['re_end_period'])); ?></strong>
+                </span><br>
+            <?php endif; ?>
+            <?php if ($hasDataDrivenRevote): ?>
+                <span class="text-muted">
+                    <?php echo $duplicateVoterCount; ?> voter(s) cast multiple votes for this candidate.
+                    Rows highlighted in <span class="badge bg-warning text-dark">yellow</span> below indicate duplicates.
+                </span>
+            <?php endif; ?>
+        </div>
+    </div>
+<?php endif; ?>
 
 <?php foreach ($groupedByCollege as $collegeName => $collegeVoters): ?>
     <div class="mb-4">
@@ -225,11 +268,12 @@ ksort($groupedByCollege); // Sort colleges alphabetically
                         <th>Year Level</th>
                         <th>Department</th>
                         <th>Precinct</th>
+                        <th>Times Voted</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($collegeVoters as $i => $v): ?>
-                        <tr>
+                        <tr class="<?php echo $v['vote_count'] > 1 ? 'table-warning' : ''; ?>">
                             <td class="text-muted"><?php echo $i + 1; ?></td>
                             <td><?php echo $v['student_id']; ?></td>
                             <td><?php echo $v['name']; ?></td>
@@ -238,6 +282,12 @@ ksort($groupedByCollege); // Sort colleges alphabetically
                             <td><?php echo $v['year_level']; ?></td>
                             <td><?php echo $v['department']; ?></td>
                             <td><?php echo $v['precinct']; ?></td>
+                            <td class="text-center fw-bold">
+                                <?php echo $v['vote_count']; ?>
+                                <?php if ($v['vote_count'] > 1): ?>
+                                    <span class="badge bg-warning text-dark ms-1" title="Voted more than once">!</span>
+                                <?php endif; ?>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

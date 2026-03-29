@@ -432,7 +432,7 @@ try {
                                     <div class="tab-pane fade show active" id="overview" role="tabpanel">
                                         <div class="container-fluid mt-5" style="max-width:1000px">
                                             <?php if ($canRegister): ?>
-                                                <h2 class="text-center text-light m-2 mb-4">Filing of Candidacy for <?= htmlspecialchars($candidacy_name ?? '') ?></h2>
+                                                <h2 class="text-center m-2 mb-4">Filing of Candidacy for <?= htmlspecialchars($candidacy_name ?? '') ?></h2>
                                                 <div class="card mx-auto">
                                                     <div class="card-body p-4">
                                                         <h4 class="text-center mb-4"><?= htmlspecialchars($form_name ?? '') ?></h4>
@@ -528,8 +528,8 @@ try {
                                                                                         accept=".jpg,.jpeg,.png"
                                                                                         data-preview-target="prev_<?= $field['id'] ?>"
                                                                                         data-preview-type="image">
-                                                                                    <label class="file-label" for="field_<?= $field['id'] ?>">
-                                                                                        <i class="mdi mdi-camera me-1"></i> Choose Profile Picture
+                                                                                    <label class="file-label text-light" for="field_<?= $field['id'] ?>">
+                                                                                        <i class="mdi mdi-camera me-1 text-light"></i> Choose Profile Picture
                                                                                     </label>
                                                                                 </div>
                                                                                 <div id="prev_<?= $field['id'] ?>" class="upload-preview-box" role="status" aria-live="polite">
@@ -562,8 +562,8 @@ try {
                                                                                                 data-preview-target="prev_<?= $field['id'] ?>"
                                                                                                 data-preview-type="any"
                                                                                                 <?= $field['is_required'] ? 'required' : '' ?>>
-                                                                                            <label class="file-label" for="field_<?= $field['id'] ?>">
-                                                                                                <i class="mdi mdi-upload me-1"></i> Choose File
+                                                                                            <label class="file-label text-light" for="field_<?= $field['id'] ?>">
+                                                                                                <i class="mdi mdi-upload me-1 text-light"></i> Choose File
                                                                                             </label>
                                                                                         </div>
                                                                                         <div id="prev_<?= $field['id'] ?>" class="upload-preview-box" role="status" aria-live="polite">
@@ -592,7 +592,7 @@ try {
                                                                     </div>
                                                                 <?php endforeach; ?>
                                                                 <div class="d-flex justify-content-center mt-4">
-                                                                    <button type="submit" class="btn btn-primary px-5">Submit Registration</button>
+                                                                    <button type="submit" class="btn btn-primary text-light px-5">Submit Registration</button>
                                                                 </div>
                                                             </form>
                                                         <?php endif; ?>

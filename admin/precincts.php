@@ -241,8 +241,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
                       <a class="nav-link" id="tab-archived" data-bs-toggle="tab"
                         data-bs-target="#paneArchived" type="button" role="tab"
                         aria-controls="paneArchived" aria-selected="false"> <i class="bi bi-archive me-1"></i>
-                        Previous Precincts
-
+                        Archived Election History
+                        <span class="tab-badge"><?= $archived_count ?></span>
                       </a>
                     </li>
 
@@ -428,6 +428,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
                                 <th>Precinct Name</th>
                                 <th>College</th>
                                 <th>Department</th>
+                                <th>Location</th>
+                                <th>Type</th>
                                 <th>Previously Assigned Election</th>
                                 <th>Archived On</th>
                                 <th>Action</th>
@@ -439,15 +441,20 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
                             SELECT
                               p.id          AS precinct_id,
                               p.name        AS precinct_name,
+                              p.location,
                               c.college_name,
                               d.department_name,
                               e.election_name,
-                              pe.archived_at
+                              pe.archived_at,
+                               campus.campus_name     AS campus_type_name,
+        ext_campus.campus_name AS external_campus_name
                             FROM precinct_elections pe
                             JOIN precincts    p  ON pe.precinct_id   = p.id
                             JOIN elections   e   ON pe.election_name = e.id
                             LEFT JOIN colleges    c ON p.college    = c.college_id
                             LEFT JOIN departments d ON p.department = d.department_id
+                             LEFT JOIN campuses    campus     ON p.type             = campus.campus_id
+    LEFT JOIN campuses    ext_campus ON p.college_external = ext_campus.campus_id
                             WHERE pe.archived = 1
                             ORDER BY pe.archived_at DESC
                           ");
@@ -460,6 +467,12 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
                                 <td>" . htmlspecialchars($ar['precinct_name'])    . "</td>
                                 <td>" . htmlspecialchars($ar['college_name']    ?? '—') . "</td>
                                 <td>" . htmlspecialchars($ar['department_name'] ?? '—') . "</td>
+                                   <td>" . htmlspecialchars($ar['location']) . "</td>
+                               <td>" . htmlspecialchars($ar['campus_type_name'] ?? 'Unknown');
+                                  if (($ar['campus_type_name'] ?? '') === 'WMSU ESU' && !empty($ar['external_campus_name'])) {
+                                    echo " (" . htmlspecialchars($ar['external_campus_name']) . ")";
+                                  }
+                                  echo "</td>
                                 <td>
                                   <span class='badge bg-secondary fs-6 px-3 py-2'>"
                                     . htmlspecialchars($ar['election_name'])

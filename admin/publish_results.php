@@ -485,28 +485,33 @@ function archiveAcademicInfo($archivePdo, $ayData)
 // ─────────────────────────────────────────────────────────────────────────────
 function archiveVotingPeriod($archivePdo, $vpData)
 {
-    $archivePdo->prepare("
+    $stmt = $archivePdo->prepare("
         INSERT INTO archived_voting_periods
-        (id, election_id, start_period, end_period, status, created_at)
-        VALUES (?, ?, ?, ?, ?, ?)
+        (id, election_id, start_period, end_period, re_start_period, re_end_period, status, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
-            election_id  = VALUES(election_id),
-            start_period = VALUES(start_period),
-            end_period   = VALUES(end_period),
-            status       = VALUES(status),
-            created_at   = VALUES(created_at)
-    ")->execute([
+            election_id      = VALUES(election_id),
+            start_period     = VALUES(start_period),
+            end_period       = VALUES(end_period),
+            re_start_period  = VALUES(re_start_period),
+            re_end_period    = VALUES(re_end_period),
+            status           = VALUES(status),
+            created_at       = VALUES(created_at)
+    ");
+
+    $stmt->execute([
         $vpData['voting_period_id'],
         $vpData['election_id'],
         $vpData['start_period'],
         $vpData['end_period'],
+        $vpData['re_start_period'],
+        $vpData['re_end_period'],
         'archived',
         date('Y-m-d H:i:s')
     ]);
 
     return "Archived voting period: {$vpData['voting_period_id']}";
 }
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPER: archiveElection

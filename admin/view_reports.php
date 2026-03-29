@@ -386,120 +386,122 @@ function checkForTiedVotes($voting_period_id)
             fetchData();
 
             $('#publishBtn').click(function(e) {
-                e.preventDefault();
+                    e.preventDefault();
 
-                // Show loading state
-                Swal.fire({
-                    title: 'Checking Results',
-                    html: 'Please wait while we check for any tied votes...',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-
-                $.ajax({
-                    url: 'check_tied_votes.php',
-                    method: 'GET',
-                    data: {
-                        voting_period_id: votingPeriodId
-                    },
-                    success: function(response) {
-                        Swal.close();
-
-                        // Parse response if it's a string
-                        if (typeof response === 'string') {
-                            try {
-                                response = JSON.parse(response);
-                            } catch (e) {
-                                Swal.fire({
-                                    title: "Error",
-                                    text: "Invalid response from server",
-                                    icon: "error"
-                                });
-                                return;
-                            }
+                    // Show loading state
+                    Swal.fire({
+                        title: 'Checking Results',
+                        html: 'Please wait while we check for any tied votes...',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
                         }
+                    });
 
-                        if (response.hasTies) {
-                            // Format tied positions with better organization
-                            let tiedList = '<div style="text-align: left; max-height: 300px; overflow-y: auto;">';
+                    $.ajax({
+                        url: 'check_tied_votes.php',
+                        method: 'GET',
+                        data: {
+                            voting_period_id: votingPeriodId
+                        },
+                        success: function(response) {
+                            Swal.close();
 
-                            for (const [position, departments] of Object.entries(response.tiedPositions)) {
-                                tiedList += `<h4 style="margin-bottom: 5px;">${position}:</h4><ul style="margin-top: 5px;">`;
-
-                                for (const [department, candidates] of Object.entries(departments)) {
-                                    const deptLabel = department === 'Central' ? 'Central Position' : `Department: ${department}`;
-                                    tiedList += `<li><b>${deptLabel}</b><ul>`;
-
-                                    candidates.forEach(candidate => {
-                                        tiedList += `<li>${candidate.name} (${candidate.party}) - ${candidate.vote_count} votes</li>`;
-                                        console.log(`- ${candidate.name} (${candidate.party}) — ${candidate.vote_count} votes`);
+                            // Parse response if it's a string
+                            if (typeof response === 'string') {
+                                try {
+                                    response = JSON.parse(response);
+                                } catch (e) {
+                                    Swal.fire({
+                                        title: "Error",
+                                        text: "Invalid response from server",
+                                        icon: "error"
                                     });
-
-                                    tiedList += `</ul></li>`;
+                                    return;
                                 }
-
-                                tiedList += `</ul>`;
                             }
 
-                            tiedList += '</div>';
+                            if (response.hasTies) {
+                                // Format tied positions with better organization
+                                let tiedList = '<div style="text-align: left; max-height: 300px; overflow-y: auto;">';
 
+                                for (const [position, departments] of Object.entries(response.tiedPositions)) {
+                                    tiedList += `<h4 style="margin-bottom: 5px;">${position}:</h4><ul style="margin-top: 5px;">`;
+
+                                    for (const [department, candidates] of Object.entries(departments)) {
+                                        const deptLabel = department === 'Central' ? 'Central Position' : `Department: ${department}`;
+                                        tiedList += `<li><b>${deptLabel}</b><ul>`;
+
+                                        candidates.forEach(candidate => {
+                                            tiedList += `<li>${candidate.name} (${candidate.party}) - ${candidate.vote_count} votes</li>`;
+                                            console.log(`- ${candidate.name} (${candidate.party}) — ${candidate.vote_count} votes`);
+                                        });
+
+                                        tiedList += `</ul></li>`;
+                                    }
+
+                                    tiedList += `</ul>`;
+                                }
+
+                                tiedList += '</div>';
+
+                                Swal.fire({
+                                    title: "Tied Votes Detected!",
+                                    html: `The following positions have tied votes:<br><br>${tiedList}<br>How would you like to proceed?`,
+                                    icon: "warning",
+                                    showCancelButton: true,
+                                    showDenyButton: true,
+                                    // confirmButtonText: 'Revote with Electoral Board',
+                                    denyButtonText: 'Public Revote',
+                                    cancelButtonText: 'Cancel',
+                                    width: '800px',
+                                    customClass: {
+                                        popup: 'tied-votes-popup'
+                                    }
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        // Option 1: Electoral Board
+                                        window.open(`revote_with_electoral_board.php?voting_period_id=${votingPeriodId}`, '_blank');
+                                    } else if (result.isDenied) {
+
+                                        $('#publicRevoteModal').modal('show'); // Show the reschedule modal
+
+                                        // // Option 2: Public Revote
+                                        // const positionsParam = encodeURIComponent(JSON.stringify(response.tiedPositions));
+                                        // window.location.href = `revote_public.php?voting_period_id=${votingPeriodId}&positions=${positionsParam}`;
+                                    }
+                                });
+                            } else {
+                                Swal.fire({
+                                    title: "No Ties Detected",
+                                    text: "Would you like to publish the election results now?",
+                                    icon: "question",
+                                    showCancelButton: true,
+                                    confirmButtonColor: "#3085d6",
+                                    cancelButtonColor: "#d33",
+                                    confirmButtonText: "Yes, publish results",
+                                    cancelButtonText: "Not yet"
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        window.location.href = `publish_results.php?voting_period_id=${votingPeriodId}`;
+                                    }
+                                });
+                            }
+                        },
+                        error: function(xhr, status, error) {
                             Swal.fire({
-                                title: "Tied Votes Detected!",
-                                html: `The following positions have tied votes:<br><br>${tiedList}<br>How would you like to proceed?`,
-                                icon: "warning",
-                                showCancelButton: true,
-                                showDenyButton: true,
-                                confirmButtonText: 'Revote with Electoral Board',
-                                denyButtonText: 'Public Revote',
-                                cancelButtonText: 'Cancel',
-                                width: '800px',
-                                customClass: {
-                                    popup: 'tied-votes-popup'
-                                }
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    // Option 1: Electoral Board
-                                    window.open(`revote_with_electoral_board.php?voting_period_id=${votingPeriodId}`, '_blank');
-                                } else if (result.isDenied) {
-
-                                    $('#publicRevoteModal').modal('show'); // Show the reschedule modal
-
-                                    // // Option 2: Public Revote
-                                    // const positionsParam = encodeURIComponent(JSON.stringify(response.tiedPositions));
-                                    // window.location.href = `revote_public.php?voting_period_id=${votingPeriodId}&positions=${positionsParam}`;
-                                }
+                                title: "Error",
+                                text: "Could not check for tied votes. Please try again. " +
+                                    (xhr.responseText ? "Server response: " + xhr.responseText : ""),
+                                icon: "error"
                             });
-                        } else {
-                            Swal.fire({
-                                title: "No Ties Detected",
-                                text: "Would you like to publish the election results now?",
-                                icon: "question",
-                                showCancelButton: true,
-                                confirmButtonColor: "#3085d6",
-                                cancelButtonColor: "#d33",
-                                confirmButtonText: "Yes, publish results",
-                                cancelButtonText: "Not yet"
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    window.location.href = `publish_results.php?voting_period_id=${votingPeriodId}`;
-                                }
-                            });
+                            console.error("AJAX Error:", status, error);
                         }
-                    },
-                    error: function(xhr, status, error) {
-                        Swal.fire({
-                            title: "Error",
-                            text: "Could not check for tied votes. Please try again. " +
-                                (xhr.responseText ? "Server response: " + xhr.responseText : ""),
-                            icon: "error"
-                        });
-                        console.error("AJAX Error:", status, error);
-                    }
-                });
+                    });
 
-            });
+                }
+
+            );
         });
 
         function fetchData() {

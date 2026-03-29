@@ -1,5 +1,6 @@
 <?php
 session_start();
+date_default_timezone_set('Asia/Manila');
 require '../../includes/conn.php';
 require '../../../vendor/autoload.php';
 
@@ -29,7 +30,6 @@ try {
 
     $status = ($status_action === 'accept') ? 'accepted' : 'declined';
 
-    echo $status;
 
     // ── 1. Fetch all pending candidates for this event BEFORE updating ──
     // so we have their IDs to send emails to
