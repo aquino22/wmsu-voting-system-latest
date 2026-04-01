@@ -10,7 +10,10 @@
 ---
 
 ### ⚡ THE STACK
-`Svelte-Inspired Logic` • `PHP PDO` • `Tailwind-Ready CSS` • `Chart.js`
+**Frontend:** `HTML5` • `CSS3` • `JavaScript` • `jQuery` • `Bootstrap`  
+**Backend:** `PHP 8.x` • `PHP PDO` • `AJAX`  
+**Analytics:** `Chart.js`  
+**Deployment:** `MySQL` • `cPanel`
 
 </div>
 
@@ -21,30 +24,73 @@
     <td width="50%" valign="top">
       <h4>🔐 SECURE VOTING</h4>
       <ul>
-        <li><b>Multi-Tier Scopes:</b> Central, College, and ESU.</li>
-        <li><b>QR Verification:</b> Email-linked identity masking.</li>
-        <li><b>Anti-Fraud:</b> Strict "One-Person, One-Vote."</li>
+        <li><b>Multi-Tier Scopes:</b> Central (Campus-wide) and Local (College/Department) positions.</li>
+        <li><b>QR Verification:</b> Secure precinct entry via unique identity masking.</li>
+        <li><b>Anti-Fraud:</b> Strict "One-Person, One-Vote" enforcement with session tracking.</li>
       </ul>
     </td>
     <td width="50%" valign="top">
-      <h4>🔄 REVOTE ENGINE</h4>
+      <h4>🔄 REVOTE & ARCHIVE</h4>
       <ul>
-        <li><b>Tie-Detection:</b> Auto-mapping of <code>tied_candidates</code>.</li>
-        <li><b>Lifecycle:</b> Not Voted → Voted → Revoted.</li>
-        <li><b>Precision:</b> Targeted voter eligibility.</li>
+        <li><b>Tie-Detection:</b> Auto-mapping of <code>tied_candidates</code> for targeted run-offs.</li>
+        <li><b>Historical Data:</b> Dedicated archiving engine for previous election cycles.</li>
+        <li><b>Persistence:</b> Voters can view published winners from past elections.</li>
       </ul>
     </td>
   </tr>
 </table>
 
-## 📊 ANALYTICS & INSIGHTS
-> **Real-time Data Visualization:** High-fidelity Bar and Pie charts for instant winner identification and partylist distribution.
+---
+
+## 👥 ROLE-BASED ACCESS CONTROL (RBAC)
+
+| Role | Responsibility |
+| :--- | :--- |
+| **Admin** | Full system CRUD, configuration of election scopes, and global operations. |
+| **Adviser** | Voter validation (Accept/Reject) and automated QR code distribution. |
+| **Moderator** | Precinct management, overseeing voting flow, and QR-based entry clearance. |
+| **Voter** | Secure candidate selection, real-time result viewing (if published), and profile management. |
 
 ---
 
-## 🛠️ QUICK START
+## 📊 ANALYTICS & INSIGHTS
+> **Real-time Data Visualization:** Leveraging **Chart.js** to provide high-fidelity Bar and Pie charts for instant winner identification and partylist distribution.
 
-### 1. Clone & Prep
+---
+
+## 🛠️ CORE FEATURES
+
+* **Dynamic Election Scopes:** Central elections for university-wide seats + Local positions editable by specific Colleges/Departments.
+* **Precinct Security:** Integrated QR code system ensures only verified voters gain access to the digital ballot.
+* **Result Transparency:** Dedicated interface for voters to view ongoing published results and historical winners.
+* **Asynchronous UX:** Powered by **AJAX** and **jQuery** for seamless voting without page reloads.
+
+---
+
+## 🚀 QUICK START
+
+### 1. Clone the Source
 ```bash
-git clone [https://github.com/irene23/voting-system.git](https://github.com/username/voting-system.git)
-composer install
+git clone [https://github.com/irene23/voting-system.git](https://github.com/irene23/voting-system.git)
+cd voting-system
+2. Database Setup (phpMyAdmin / cPanel)
+Login to your cPanel or phpMyAdmin.
+
+Create two separate databases:
+
+wmsu_voting_system
+
+wmsu_voting_system_archived
+
+Locate the .sql files in the /db folder and import them into their respective databases.
+
+3. Run the System
+Configure your database credentials in the project connection file (e.g., config.php or conn.php).
+
+Ensure your server is running PHP 8.x with the PDO extension enabled.
+
+Access the system via your local host (e.g., localhost/voting-system) or your domain.
+```
+
+Built for the WMSU Academic Community
+</div>
