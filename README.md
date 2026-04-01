@@ -73,7 +73,11 @@
 ```bash
 git clone [https://github.com/irene23/voting-system.git](https://github.com/irene23/voting-system.git)
 cd voting-system
+```
+
 2. Database Setup (phpMyAdmin / cPanel)
+
+```bash
 Login to your cPanel or phpMyAdmin.
 
 Create two separate databases:
@@ -83,7 +87,8 @@ wmsu_voting_system
 wmsu_voting_system_archived
 
 Locate the .sql files in the /db folder and import them into their respective databases.
-
+```
+```bash
 3. Run the System
 Configure your database credentials in the project connection file (e.g., config.php or conn.php).
 
