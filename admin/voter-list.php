@@ -548,6 +548,7 @@ $allElections = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                                 <th>School Year</th>
                                                                 <th>Semester</th>
                                                                 <th>Student ID</th>
+                                                                <th>Email</th>
                                                                 <th>First Name</th>
                                                                 <th>Middle Name</th>
                                                                 <th>Last Name</th>
@@ -562,7 +563,7 @@ $allElections = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                                 <th>Elections Participated</th>
                                                                 <th>Precinct</th>
                                                                 <th>Vote Status</th>
-                                                                <th>Email</th>
+
                                                                 <th>Total Emails Sent</th>
                                                                 <th>Email Details</th>
                                                                 <th>Custom Voter Fields</th>
@@ -586,6 +587,9 @@ $allElections = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                                         <td><?= htmlspecialchars($log['school_year'] ?? 'N/A') ?></td>
                                                                         <td><?= htmlspecialchars($log['semester'] ?? 'N/A') ?></td>
                                                                         <td><?= htmlspecialchars($log['student_id'] ?? 'N/A') ?></td>
+
+
+                                                                        <td><?= htmlspecialchars($log['voter_email'] ?? 'N/A') ?></td>
                                                                         <td><?= htmlspecialchars($log['first_name'] ?? 'N/A') ?></td>
                                                                         <td><?= htmlspecialchars($log['middle_name'] ?? 'N/A') ?></td>
                                                                         <td><?= htmlspecialchars($log['last_name'] ?? 'N/A') ?></td>
@@ -632,7 +636,6 @@ $allElections = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                                             <?= !empty($log['vote_statuses']) ? $log['vote_statuses'] : 'N/A' ?>
                                                                         </td>
 
-                                                                        <td><?= htmlspecialchars($log['voter_email'] ?? 'N/A') ?></td>
                                                                         <td><?= htmlspecialchars($log['total_emails_sent'] ?? '0') ?></td>
 
                                                                         <td>
@@ -824,6 +827,42 @@ $allElections = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         });
     </script>
+
+    <script>
+        async function checkElectionStatus() {
+            try {
+                const response = await fetch('check_status.php');
+                const data = await response.json();
+
+                if (data.expired && data.elections.length > 0) {
+                    // Loop through each expired election found
+                    for (const election of data.elections) {
+                        await Swal.fire({
+                            title: 'Voting Period Concluded',
+                            text: `The period for ${election.election_name} has officially ended. Click 'Publish Results' to proceed. This can still be dismissed if further information checking on periods are needed to be performed.`,
+                            icon: 'info',
+                            showCancelButton: true,
+                            confirmButtonText: 'Publish Results',
+                            cancelButtonText: 'Dismiss',
+                            confirmButtonColor: '#3085d6',
+                            cancelButtonColor: '#6e7881',
+                            allowOutsideClick: true,
+                            allowEscapeKey: true
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = election.redirect_to;
+                            }
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error('Status Check Error:', err);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', checkElectionStatus);
+    </script>
+
 </body>
 <button class="back-to-top" id="backToTop" title="Go to top">
     <i class="mdi mdi-arrow-up"></i>

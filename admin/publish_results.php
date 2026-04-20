@@ -504,8 +504,8 @@ function archiveVotingPeriod($archivePdo, $vpData)
         $vpData['election_id'],
         $vpData['start_period'],
         $vpData['end_period'],
-        $vpData['re_start_period'],
-        $vpData['re_end_period'],
+        $vpData['re_start_period'] ?? null,
+        $vpData['re_end_period'] ?? null,
         'archived',
         date('Y-m-d H:i:s')
     ]);
@@ -1049,6 +1049,12 @@ function archivePrecincts($pdo, $archivePdo, $election_id, $voting_period_id)
     foreach ($precincts as $prec) {
         $reset->execute([$archivedAt, $prec['id']]);
     }
+
+    $pdo->prepare("
+    UPDATE moderators
+    SET precinct = NULL
+    WHERE precinct IN ($placeholders)
+")->execute($precinctIds);
 
     // ── 5. Mark precinct_elections rows as archived ───────────────────────
     $pdo->prepare("

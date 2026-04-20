@@ -1308,6 +1308,40 @@ if (
         }
       });
     </script>
+<script>
+    async function checkElectionStatus() {
+        try {
+            const response = await fetch('check_status.php');
+            const data = await response.json();
+
+            if (data.expired && data.elections.length > 0) {
+                // Loop through each expired election found
+                for (const election of data.elections) {
+                    await Swal.fire({
+                        title: 'Voting Period Concluded',
+                        text: `The period for ${election.election_name} has officially ended. Click 'Publish Results' to proceed. This can still be dismissed if further information checking on periods are needed to be performed.`,
+                        icon: 'info',
+                        showCancelButton: true,
+                        confirmButtonText: 'Publish Results',
+                        cancelButtonText: 'Dismiss',
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#6e7881',
+                        allowOutsideClick: true,
+                        allowEscapeKey: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            window.location.href = election.redirect_to;
+                        }
+                    });
+                }
+            }
+        } catch (err) {
+            console.error('Status Check Error:', err);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', checkElectionStatus);
+</script>
 
     <div class="modal fade" id="ongoingElectionsModal" tabindex="-1" aria-labelledby="ongoingElectionsModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered ">

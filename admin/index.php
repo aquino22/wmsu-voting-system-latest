@@ -739,6 +739,13 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
                                                                                     </div>
                                                                                 </div>
 
+                                                                                <div class="mb-3">
+                                                                                    <small class="text-muted d-block mb-1">
+                                                                                        <i class="mdi mdi-palette"></i> Party Colors
+                                                                                    </small>
+                                                                                    <div id="party-legend-<?php echo $period['id']; ?>"></div>
+                                                                                </div>
+
                                                                                 <!-- Position tabs -->
                                                                                 <ul class="nav nav-tabs"
                                                                                     id="positionTabs-<?php echo $period['id']; ?>" role="tablist">
@@ -1069,9 +1076,105 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
             const fmt = n => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
             const trunc = (s, max) => s.length > max ? s.slice(0, max - 3) + '…' : s;
 
-            const hsl = (i, n) => `hsl(${Math.round(i * 360 / Math.max(n,1))},70%,60%)`;
-            const hslDark = (i, n) => `hsl(${Math.round(i * 360 / Math.max(n,1))},70%,40%)`;
-            const hslLight = (i, n) => `hsl(${Math.round(i * 360 / Math.max(n,1))},70%,70%)`;
+
+            // Pre-defined palette: 8 visually distinct, accessible colors
+            const PARTY_PALETTE = [{
+                    bg: '#4f77e8',
+                    border: '#2d57d1',
+                    text: '#1a3a9e',
+                    light: '#e6ecfc'
+                }, // Blue
+                {
+                    bg: '#e85d42',
+                    border: '#c73d22',
+                    text: '#8b2010',
+                    light: '#fceae7'
+                }, // Red-orange
+                {
+                    bg: '#27a96c',
+                    border: '#178a53',
+                    text: '#0d5c36',
+                    light: '#e4f7ef'
+                }, // Green
+                {
+                    bg: '#f0a020',
+                    border: '#cc8310',
+                    text: '#7a4d06',
+                    light: '#fdf3e0'
+                }, // Amber
+                {
+                    bg: '#9b59e8',
+                    border: '#7c3ad1',
+                    text: '#4e1f8f',
+                    light: '#f1eafc'
+                }, // Purple
+                {
+                    bg: '#e85aac',
+                    border: '#c83a8d',
+                    text: '#7c1e56',
+                    light: '#fceaf5'
+                }, // Pink
+                {
+                    bg: '#17b8c8',
+                    border: '#0e96a4',
+                    text: '#065f6a',
+                    light: '#e2f8fa'
+                }, // Teal
+                {
+                    bg: '#8e8e8e',
+                    border: '#666666',
+                    text: '#333333',
+                    light: '#f0f0f0'
+                }, // Gray (Independent fallback)
+            ];
+
+            // Global registry: party name → color object (persists across all charts)
+            const partyColorRegistry = {};
+            let partyColorIndex = 0;
+
+            function getPartyColor(partyName) {
+                const key = (partyName || 'Independent').trim();
+                if (!partyColorRegistry[key]) {
+                    partyColorRegistry[key] = PARTY_PALETTE[partyColorIndex % PARTY_PALETTE.length];
+                    partyColorIndex++;
+                }
+                return partyColorRegistry[key];
+            }
+
+            /* ── Build the shared party legend (call once per period) ── */
+            function buildPartyLegend(periodId, voteData) {
+                // Collect all unique parties from this period's vote data
+                const parties = new Set();
+                Object.values(voteData).forEach(pos => {
+                    (pos.candidates || []).forEach(c => {
+                        parties.add((c.party_name || 'Independent').trim());
+                    });
+                });
+
+                // Pre-assign colors in consistent order
+                parties.forEach(p => getPartyColor(p));
+
+                const container = document.getElementById(`party-legend-${periodId}`);
+                if (!container) return;
+
+                container.innerHTML = '';
+                parties.forEach(party => {
+                    const c = getPartyColor(party);
+                    const pill = document.createElement('div');
+                    pill.style.cssText = `
+            display:inline-flex; align-items:center; gap:6px;
+            padding:4px 12px; border-radius:20px; margin:3px;
+            background:${c.light}; border:1.5px solid ${c.border};
+            font-size:13px; font-weight:500; color:${c.text};
+        `;
+                    pill.innerHTML = `
+            <span style="width:11px;height:11px;border-radius:50%;
+                         background:${c.bg};flex-shrink:0;"></span>
+            ${party}
+        `;
+                    container.appendChild(pill);
+                });
+            }
 
             /* ────────────────────────────────────────────────────────
                BUILD BAR CHART (create from scratch)
@@ -1083,7 +1186,11 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 
                 const cands = data.candidates || [];
                 const n = cands.length;
-                const labels = n ? cands.map(c => trunc(c.name, isTabChart ? 30 : 20)) : ['No candidates'];
+                const labels = n ?
+                    cands.map(c => [
+                        trunc(c.name, isTabChart ? 30 : 20),
+                        `(${(c.party_name || 'Independent').trim()})`
+                    ]) : ['No candidates'];
                 const votes = n ? cands.map(c => Number(c.vote_count) || 0) : [0];
                 const details = n ?
                     cands.map(c => ({
@@ -1098,6 +1205,11 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
                         department: 'N/A'
                     }];
 
+                // Use party color for each candidate bar
+                const bgColors = n ? cands.map(c => getPartyColor(c.party_name || 'Independent').bg + 'cc') : ['#ccc'];
+                const borderColors = n ? cands.map(c => getPartyColor(c.party_name || 'Independent').border) : ['#999'];
+                const hoverColors = n ? cands.map(c => getPartyColor(c.party_name || 'Independent').bg) : ['#bbb'];
+
                 lastVoteMap[canvasId] = [...votes];
 
                 allCharts[canvasId] = new Chart(canvas.getContext('2d'), {
@@ -1107,9 +1219,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
                         datasets: [{
                             label: 'Votes',
                             data: votes,
-                            backgroundColor: n ? cands.map((_, i) => hsl(i, n)) : ['#ccc'],
-                            borderColor: n ? cands.map((_, i) => hslDark(i, n)) : ['#999'],
-                            hoverBackgroundColor: n ? cands.map((_, i) => hslLight(i, n)) : ['#bbb'],
+                            backgroundColor: bgColors,
+                            borderColor: borderColors,
+                            hoverBackgroundColor: hoverColors,
                             borderWidth: 2,
                             borderRadius: 8,
                             borderSkipped: false,
@@ -1143,7 +1255,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
                                     color: '#555'
                                 },
                                 grid: {
-                                    color: 'rgba(0,0,0,.1)'
+                                    color: 'rgba(0,0,0,.08)'
                                 }
                             },
                             x: {
@@ -1177,27 +1289,33 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
                                 }
                             },
                             tooltip: {
-                                backgroundColor: 'rgba(0,0,0,.8)',
+                                backgroundColor: 'rgba(0,0,0,.85)',
                                 titleFont: {
-                                    size: 12,
+                                    size: 13,
                                     weight: 'bold'
                                 },
                                 bodyFont: {
-                                    size: 11
+                                    size: 12
                                 },
-                                padding: 8,
-                                cornerRadius: 6,
+                                padding: 10,
+                                cornerRadius: 8,
                                 callbacks: {
                                     title: ctx => details[ctx[0].dataIndex].name,
                                     label: ctx => {
                                         const d = details[ctx.dataIndex];
-                                        return [`Party: ${d.party}`, `Votes: ${fmt(votes[ctx.dataIndex])}`, `College: ${d.college||'N/A'}`, `Department: ${d.department||'N/A'}`];
+                                        const c = getPartyColor(d.party);
+                                        return [
+                                            `Party: ${d.party}`,
+                                            `Votes: ${fmt(votes[ctx.dataIndex])}`,
+                                            `College: ${d.college    || 'N/A'}`,
+                                            `Department: ${d.department || 'N/A'}`
+                                        ];
                                     }
                                 }
                             },
                             legend: {
                                 display: false
-                            }
+                            } // Party legend is shown separately as pills
                         }
                     }
                 });
@@ -1308,6 +1426,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
             ──────────────────────────────────────────────────────── */
             function renderChartsForPeriod(periodId, voteData) {
                 // "All positions" overview tab
+                buildPartyLegend(periodId, voteData); // ← add this line first
+
                 Object.keys(voteData).forEach(pos => {
                     buildBarChart(`chart_${periodId}_${pos.replace(/ /g,'_')}`, pos, voteData[pos], false);
                 });
@@ -1548,6 +1668,40 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
         });
     </script>
 
+    <script>
+        async function checkElectionStatus() {
+            try {
+                const response = await fetch('check_status.php');
+                const data = await response.json();
+
+                if (data.expired && data.elections.length > 0) {
+                    // Loop through each expired election found
+                    for (const election of data.elections) {
+                        await Swal.fire({
+                            title: 'Voting Period Concluded',
+                            text: `The period for ${election.election_name} has officially ended. Click 'Publish Results' to proceed. This can still be dismissed if further information checking on periods are needed to be performed.`,
+                            icon: 'info',
+                            showCancelButton: true,
+                            confirmButtonText: 'Publish Results',
+                            cancelButtonText: 'Dismiss',
+                            confirmButtonColor: '#3085d6',
+                            cancelButtonColor: '#6e7881',
+                            allowOutsideClick: true,
+                            allowEscapeKey: true
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = election.redirect_to;
+                            }
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error('Status Check Error:', err);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', checkElectionStatus);
+    </script>
 </body>
 
 </html>

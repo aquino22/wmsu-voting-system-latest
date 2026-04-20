@@ -42,9 +42,6 @@ $votingPeriodCreatedAt = $votingPeriod['created_at'];
 $votingPeriodCandidacyId = $votingPeriod['election_id'];
 
 
-
-
-
 // Step 2: Match the voting period name with elections where status is 'Ongoing' or 'Published'
 $stmt = $pdo->prepare("
        SELECT * 
@@ -55,13 +52,9 @@ $stmt = $pdo->prepare("
 $stmt->execute([$votingPeriodCandidacyId]);
 $election = $stmt->fetch(PDO::FETCH_ASSOC);
 
-
-
 if (!$election) {
     throw new Exception("No matching election found for the current voting period.");
 }
-
-
 
 // Fetch all unique colleges from voters, join to get college_name
 $stmt = $pdo->query("
@@ -127,7 +120,7 @@ try {
     WHERE id = ?
       AND status IN ('Ongoing', 'Scheduled', 'Published', 'Ended', 'published')
 ");
-    $stmt->execute([$votingPeriodElectionId]); // <-- wrap in array
+    $stmt->execute([$votingPeriodElectionId]);
     $election = $stmt->fetch(PDO::FETCH_ASSOC);
 
 
@@ -151,7 +144,6 @@ try {
 } catch (Exception $e) {
     $_SESSION['ERROR'] = $e->getMessage();
     echo $e->getMessage();
-    // header("Location: reports.php");
     exit();
 }
 
@@ -164,8 +156,7 @@ $stmt = $pdo->prepare("
     LIMIT 1
 ");
 
-
-$stmt->execute([$voting_period_id]); // Ensure parameter is wrapped in an array
+$stmt->execute([$voting_period_id]);
 $votingPeriod = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$votingPeriod) {
@@ -182,8 +173,6 @@ if (!$event) {
 }
 $candidacy = $event['candidacy'];
 
-
-
 // STEP 3: Get registration_form ID from candidacy
 $stmt = $pdo->prepare("SELECT id FROM registration_forms WHERE election_name = :candidacy");
 $stmt->execute(['candidacy' => $candidacy]);
@@ -192,8 +181,6 @@ if (!$form) {
     die("No registration form found for candidacy.");
 }
 $formId = $form['id'];
-
-
 
 // STEP 4: Get required field IDs
 $stmt = $pdo->prepare("
@@ -255,7 +242,6 @@ function checkForTiedVotes($voting_period_id)
             JOIN candidates c ON v.candidate_id = c.id
             WHERE v.voting_period_id = ?";
 
-    // If admin votes exist, count ONLY admin-precinct votes
     if ($useAdminVotes) {
         $sql .= " AND v.precinct = 'admin-precinct'";
     }
@@ -305,7 +291,6 @@ function checkForTiedVotes($voting_period_id)
 <html lang="en">
 
 <head>
-    <!-- Head section unchanged -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>WMSU I-Elect</title>
@@ -322,7 +307,6 @@ function checkForTiedVotes($voting_period_id)
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Include jsPDF and html2canvas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
@@ -356,7 +340,7 @@ function checkForTiedVotes($voting_period_id)
         const votingPeriodId = <?php echo json_encode($voting_period_id); ?>;
 
         $(document).ready(function() {
-            console.log("Departments by College:", departmentsByCollege); // Debugging
+            console.log("Departments by College:", departmentsByCollege);
 
             $('#collegeFilter').change(function() {
 
@@ -388,7 +372,6 @@ function checkForTiedVotes($voting_period_id)
             $('#publishBtn').click(function(e) {
                     e.preventDefault();
 
-                    // Show loading state
                     Swal.fire({
                         title: 'Checking Results',
                         html: 'Please wait while we check for any tied votes...',
@@ -407,7 +390,6 @@ function checkForTiedVotes($voting_period_id)
                         success: function(response) {
                             Swal.close();
 
-                            // Parse response if it's a string
                             if (typeof response === 'string') {
                                 try {
                                     response = JSON.parse(response);
@@ -422,7 +404,6 @@ function checkForTiedVotes($voting_period_id)
                             }
 
                             if (response.hasTies) {
-                                // Format tied positions with better organization
                                 let tiedList = '<div style="text-align: left; max-height: 300px; overflow-y: auto;">';
 
                                 for (const [position, departments] of Object.entries(response.tiedPositions)) {
@@ -451,7 +432,6 @@ function checkForTiedVotes($voting_period_id)
                                     icon: "warning",
                                     showCancelButton: true,
                                     showDenyButton: true,
-                                    // confirmButtonText: 'Revote with Electoral Board',
                                     denyButtonText: 'Public Revote',
                                     cancelButtonText: 'Cancel',
                                     width: '800px',
@@ -460,15 +440,9 @@ function checkForTiedVotes($voting_period_id)
                                     }
                                 }).then((result) => {
                                     if (result.isConfirmed) {
-                                        // Option 1: Electoral Board
                                         window.open(`revote_with_electoral_board.php?voting_period_id=${votingPeriodId}`, '_blank');
                                     } else if (result.isDenied) {
-
-                                        $('#publicRevoteModal').modal('show'); // Show the reschedule modal
-
-                                        // // Option 2: Public Revote
-                                        // const positionsParam = encodeURIComponent(JSON.stringify(response.tiedPositions));
-                                        // window.location.href = `revote_public.php?voting_period_id=${votingPeriodId}&positions=${positionsParam}`;
+                                        $('#publicRevoteModal').modal('show');
                                     }
                                 });
                             } else {
@@ -527,19 +501,14 @@ function checkForTiedVotes($voting_period_id)
         }
     </script>
 
-
-
-
     <style>
         .custom-padding {
             padding: 20px !important;
-            /* Adjust padding as needed */
         }
     </style>
 
     <body>
         <div class="container-scroller">
-            <!-- partial:partials/_navbar.html -->
             <nav class="navbar default-layout col-lg-12 col-12 p-0  d-flex align-items-top flex-row">
                 <?php
                 $user_id = $_SESSION['user_id'];
@@ -565,11 +534,9 @@ function checkForTiedVotes($voting_period_id)
                     </div>
                     <div>
                         <a class="navbar-brand brand-logo" href="index.php">
-
                             <img src="images/wmsu-logo.png" alt="logo" class="logo img-fluid" />
                             <small style="font-size: 16px;"><b>WMSU i-Elect</b></small>
                         </a>
-
                         <a class="navbar-brand brand-logo-mini" href="index.php">
                             <img src="images/wmsu-logo.png" class="logo img-fluid" alt="logo" />
                         </a>
@@ -581,7 +548,6 @@ function checkForTiedVotes($voting_period_id)
                             <h1 class="welcome-text">Welcome, <span class="text-white fw-bold">WMSU Admin</span></h1>
                             <h6>
                                 <?php
-                                // Join with academic_years to get semester and year_label
                                 $stmt = $pdo->prepare("
                 SELECT e.*, a.year_label, a.semester
                 FROM elections e
@@ -593,7 +559,6 @@ function checkForTiedVotes($voting_period_id)
                                 $ongoingElections = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                                 if ($ongoingElections) {
-                                    // Show first election
                                     $first = array_shift($ongoingElections);
                                     echo "<br><b>School Year:</b> " . htmlspecialchars($first['year_label']) . " | ";
                                     echo "<b>Semester:</b> " . htmlspecialchars($first['semester']) . " | ";
@@ -632,7 +597,6 @@ function checkForTiedVotes($voting_period_id)
                                         });
                                     }
 
-                                    // Back to Top Button
                                     const backToTopButton = document.getElementById('backToTop');
                                     if (backToTopButton) {
                                         window.addEventListener('scroll', function() {
@@ -661,8 +625,6 @@ function checkForTiedVotes($voting_period_id)
                             <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="UserDropdown">
                                 <div class="dropdown-header text-center">
                                     <img class="img-xs rounded-circle logoe" src="images/wmsu-logo.png" alt="Profile image">
-
-
                                 </div>
                                 <p class="mb-1 mt-3 font-weight-semibold dropdown-item"><b>WMSU ADMIN</b></p>
                                 <a class="dropdown-item" id="logoutLink" href="processes/accounts/logout.php"><i class="dropdown-item-icon mdi mdi-power text-primary me-2"></i>Sign Out</a>
@@ -674,10 +636,8 @@ function checkForTiedVotes($voting_period_id)
                     </button>
                 </div>
             </nav>
-            <!-- partial -->
-            <div class="container-fluid page-body-wrapper">
-                <!-- partial:partials/_settings-panel.html -->
 
+            <div class="container-fluid page-body-wrapper">
                 <div id="right-sidebar" class="settings-panel">
                     <i class="settings-close ti-close"></i>
                     <ul class="nav nav-tabs border-top" id="setting-panel" role="tablist">
@@ -690,13 +650,13 @@ function checkForTiedVotes($voting_period_id)
                                 aria-controls="chats-section">CHATS</a>
                         </li>
                     </ul>
-
                 </div>
+
                 <?php include('includes/sidebar.php') ?>
 
                 </ul>
                 </nav>
-                <!-- partial -->
+
                 <div class="main-panel">
                     <div class="content-wrapper">
                         <div class="row">
@@ -708,9 +668,7 @@ function checkForTiedVotes($voting_period_id)
                                                 <a class="nav-link active ps-0" id="home-tab" data-bs-toggle="tab" href="reports.php" role="tab"
                                                     aria-controls="overview" aria-selected="true">Reports</a>
                                             </li>
-
                                         </ul>
-
                                     </div>
                                     <div class="tab-content tab-content-basic">
                                         <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview">
@@ -722,12 +680,9 @@ function checkForTiedVotes($voting_period_id)
                                                                 <h5><b>Election Name: </b><?php echo htmlspecialchars($election['election_name']); ?></h5>
                                                                 <div class="ms-auto" aria-hidden="true">
                                                                     <?php
-
-
                                                                     if (($election['status'] ?? '') != 'Published') { ?>
                                                                         <a href="#"><button class="btn btn-primary text-white" id="publishBtn"><i class="mdi mdi-publish"></i> Publish</button></a>
-                                                                    <?php } else {
-                                                                    ?>
+                                                                    <?php } else { ?>
                                                                         <a href="view_published.php?voting_period_id=<?php echo $voting_period_id ?>"><button class="btn btn-primary text-white"><i class="mdi mdi-eye"></i> View Published</button></a>
                                                                     <?php } ?>
                                                                     <a href="print.php?voting_period_id=<?php echo $_GET['voting_period_id'] ?>" target="_blank">
@@ -735,12 +690,10 @@ function checkForTiedVotes($voting_period_id)
                                                                     </a>
                                                                 </div>
                                                             </div>
-                                                            <?php
 
+                                                            <?php
                                                             $startPeriod = $election['start_period'] ?? null;
                                                             $endPeriod = $election['end_period'] ?? null;
-
-
                                                             ?>
                                                             <h6><b>Election Period:</b>
                                                                 <b><?php echo $startPeriod ? htmlspecialchars(date('l', strtotime($startPeriod))) : 'N/A'; ?></b>
@@ -773,12 +726,7 @@ function checkForTiedVotes($voting_period_id)
                                                                 <b><?php echo $votingEnd ? htmlspecialchars(date('l', strtotime($votingEnd))) : 'N/A'; ?></b>
                                                                 (<?php echo $votingEnd ? htmlspecialchars(date('m/d/Y, h:i A', strtotime($votingEnd))) : 'N/A'; ?>)
                                                             </h6>
-
-
-                                                            <!-- Filter Dropdowns -->
-
                                                         </div>
-
 
                                                         <ul class="nav nav-tabs" id="myTab" role="tablist">
                                                             <li class="nav-item" role="presentation">
@@ -792,10 +740,9 @@ function checkForTiedVotes($voting_period_id)
                                                             </li>
                                                         </ul>
 
-                                                        <!-- Tab Content -->
                                                         <div class="tab-content mt-4" id="myTabContent">
 
-
+                                                            <!-- ===================== OVERVIEW TAB ===================== -->
                                                             <div class="tab-pane fade show active" id="details" role="tabpanel">
                                                                 <div class="mb-3">
                                                                     <label for="collegeFilter"><b>Filter by College:</b></label>
@@ -817,13 +764,12 @@ function checkForTiedVotes($voting_period_id)
                                                                 <div class="container-fluid" id="reportContainer">
                                                                     <!-- AJAX-loaded election results will go here -->
                                                                 </div>
-
                                                             </div>
 
+                                                            <!-- ===================== STATISTICS TAB ===================== -->
                                                             <div class="tab-pane fade " id="stats" role="tabpanel">
 
                                                                 <?php
-                                                                // --- 1. Total Verified Voters ---
                                                                 $stmt = $pdo->prepare("
                                                                     SELECT COUNT(DISTINCT pv.student_id) AS total_verified 
                                                                     FROM precinct_voters pv
@@ -836,18 +782,13 @@ function checkForTiedVotes($voting_period_id)
                                                                 $stmt->execute([$voting_period_id]);
                                                                 $total_verified_voters = $stmt->fetch(PDO::FETCH_ASSOC)['total_verified'];
 
-                                                                // --- 2. Total Voted ---
                                                                 $stmt = $pdo->prepare("SELECT COUNT(DISTINCT student_id) AS total_voted FROM votes WHERE voting_period_id = ?");
                                                                 $stmt->execute([$voting_period_id]);
                                                                 $total_voted = $stmt->fetch(PDO::FETCH_ASSOC)['total_voted'];
 
-                                                                // --- 3. Total Registered Voters (Eligible for this election) ---
                                                                 $total_students = $total_verified_voters;
-
-                                                                // --- 4. Voting Summary ---
                                                                 $total_did_not_vote = $total_voted - $total_verified_voters;
 
-                                                                // --- 5. Voters per College (Verified) ---
                                                                 $stmt = $pdo->prepare("
     SELECT 
         s.college,
@@ -875,12 +816,10 @@ function checkForTiedVotes($voting_period_id)
                                                                 <div class="container-fluid">
                                                                     <h1 class="mb-5 text-center"><b>Voting Statistics</b></h1>
 
-                                                                    <!-- Total Verified -->
                                                                     <div class="mb-4">
                                                                         <h5><b>Total Verified Voters:</b> <?= number_format($total_verified_voters) ?></h5>
                                                                     </div>
 
-                                                                    <!-- Voted vs Did Not Vote -->
                                                                     <div class="mb-4">
                                                                         <h5><b>Voting Participation:</b></h5>
                                                                         <ul>
@@ -890,7 +829,6 @@ function checkForTiedVotes($voting_period_id)
                                                                         </ul>
                                                                     </div>
 
-                                                                    <!-- Chart -->
                                                                     <div class="row mb-5">
                                                                         <div class="col-lg-6 offset-lg-3" style="height: 400px;">
                                                                             <canvas id="votingStatsChart"></canvas>
@@ -925,9 +863,7 @@ function checkForTiedVotes($voting_period_id)
                                                                                                 callbacks: {
                                                                                                     label: function(context) {
                                                                                                         let label = context.label || '';
-                                                                                                        if (label) {
-                                                                                                            label += ': ';
-                                                                                                        }
+                                                                                                        if (label) label += ': ';
                                                                                                         let value = context.raw;
                                                                                                         let total = context.chart._metasets[context.datasetIndex].total;
                                                                                                         let percentage = Math.round((value / total) * 100) + '%';
@@ -942,7 +878,6 @@ function checkForTiedVotes($voting_period_id)
                                                                         });
                                                                     </script>
 
-                                                                    <!-- Table of Verified Voters Per College -->
                                                                     <div class="mb-4">
                                                                         <h5><b>Verified Voters per College</b></h5>
                                                                         <table class="table table-bordered table-striped">
@@ -976,6 +911,7 @@ function checkForTiedVotes($voting_period_id)
                                                                 </div>
                                                             </div>
 
+                                                            <!-- ===================== SUMMARY TAB ===================== -->
                                                             <div class="tab-pane fade " id="summary" role="tabpanel">
 
                                                                 <?php
@@ -986,7 +922,6 @@ function checkForTiedVotes($voting_period_id)
                                                                     die("No voting period ID provided.");
                                                                 }
 
-                                                                // STEP 1: Get voting period info with its election_name
                                                                 $stmt = $pdo->prepare("
     SELECT vp.id, e.id as election_id, e.election_name as voting_period_name
     FROM voting_periods vp
@@ -1005,7 +940,6 @@ function checkForTiedVotes($voting_period_id)
                                                                 $electionName = $votingPeriod['voting_period_name'];
                                                                 $electionId = $votingPeriod['election_id'];
 
-                                                                // STEP 2: Get candidacy/event for this voting period
                                                                 $stmt = $pdo->prepare("
     SELECT candidacy 
     FROM events 
@@ -1020,7 +954,6 @@ function checkForTiedVotes($voting_period_id)
                                                                 }
                                                                 $candidacy = $event['candidacy'];
 
-                                                                // STEP 3: Get registration form ID
                                                                 $stmt = $pdo->prepare("
     SELECT id 
     FROM registration_forms 
@@ -1034,7 +967,6 @@ function checkForTiedVotes($voting_period_id)
                                                                 }
                                                                 $formId = $form['id'];
 
-                                                                // STEP 4: Get required field IDs
                                                                 $stmt = $pdo->prepare("
     SELECT id, field_name 
     FROM form_fields 
@@ -1059,7 +991,6 @@ function checkForTiedVotes($voting_period_id)
                                                                     die("Missing one or more required field IDs.");
                                                                 }
 
-                                                                // STEP 5: Fetch colleges and ESU campuses
                                                                 $colleges = $pdo->query("
     SELECT DISTINCT c.college_id, c.college_name
     FROM voters v
@@ -1067,6 +998,7 @@ function checkForTiedVotes($voting_period_id)
     WHERE v.college IS NOT NULL
     ORDER BY c.college_id
 ")->fetchAll(PDO::FETCH_ASSOC);
+
                                                                 $esu_campuses = $pdo->query("
     SELECT DISTINCT c.campus_id, c.campus_name
     FROM precincts p
@@ -1075,23 +1007,17 @@ function checkForTiedVotes($voting_period_id)
     ORDER BY c.campus_name
 ")->fetchAll(PDO::FETCH_ASSOC);
 
-                                                                // Function to get voter statistics
                                                                 function getVoterStats($pdo, $votingPeriodId, $college = null, $campus = null)
                                                                 {
                                                                     $conditions = [];
                                                                     $params = [':voting_period_id' => $votingPeriodId];
 
-                                                                    // 1. Handling the Campus (The 'Where' they are)
                                                                     if ($campus) {
-                                                                        // If a campus is specified, we match it against college_external
                                                                         $conditions[] = "p.college_external = :campus";
                                                                         $params[':campus'] = $campus;
                                                                     }
 
-                                                                    // 2. Handling the College (The 'What' they study)
                                                                     if ($college) {
-                                                                        // If it's a Main Campus student, the college is in the voters table.
-                                                                        // If it's an ESU student, the campus location is the differentiator.
                                                                         $conditions[] = "v.college = :college";
                                                                         $params[':college'] = $college;
                                                                     }
@@ -1125,14 +1051,13 @@ function checkForTiedVotes($voting_period_id)
                                                                     $stmt->execute($params);
                                                                     $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
-
                                                                     return [
                                                                         'total'     => (int)($result['total'] ?? 0),
                                                                         'voted'     => (int)($result['voted'] ?? 0),
                                                                         'not_voted' => (int)($result['not_voted'] ?? 0)
                                                                     ];
                                                                 }
-                                                                // Function to get candidates for a position
+
                                                                 function getCandidatesForPosition(
                                                                     $pdo,
                                                                     $votingPeriodId,
@@ -1145,7 +1070,6 @@ function checkForTiedVotes($voting_period_id)
                                                                     $college = null,
                                                                     $campus = null
                                                                 ) {
-                                                                    // Step 1: Get the registration form ID for this voting period
                                                                     $stmtForm = $pdo->prepare("
         SELECT rf.id 
         FROM registration_forms rf
@@ -1161,141 +1085,109 @@ function checkForTiedVotes($voting_period_id)
                                                                         return [];
                                                                     }
 
-                                                                    // Step 2: Build query
                                                                     $where = "pos.value = :position AND c.form_id = :form_id";
                                                                     $params = [
-                                                                        ':position' => $position,
-                                                                        ':form_id' => $formId,
-                                                                        ':full_name_field_id' => $fullNameFieldId,
+                                                                        ':position'            => $position,
+                                                                        ':form_id'             => $formId,
+                                                                        ':full_name_field_id'  => $fullNameFieldId,
                                                                         ':student_id_field_id' => $studentIdFieldId,
-                                                                        ':picture_field_id' => $pictureFieldId,
-                                                                        ':party_field_id' => $partyFieldId,
-                                                                        ':position_field_id' => $positionFieldId,
-                                                                        ':voting_period_id' => $votingPeriodId
+                                                                        ':picture_field_id'    => $pictureFieldId,
+                                                                        ':party_field_id'      => $partyFieldId,
+                                                                        ':position_field_id'   => $positionFieldId,
+                                                                        ':voting_period_id'    => $votingPeriodId,
                                                                     ];
 
-                                                                    if ($college) {
+                                                                    if ($college && !$campus) {
                                                                         $where .= " AND vtr.college = :college";
                                                                         $params[':college'] = $college;
-                                                                    }
-                                                                    if ($campus) {
+                                                                    } elseif ($campus) {
+                                                                        $where .= " AND vtr.external_campus = :campus";
                                                                         $params[':campus'] = $campus;
-                                                                        $params[':campus_filter'] = $campus; // For vote counting
+                                                                    }
+                                                                    if ($college && !$campus) {
+                                                                        $voteCountExpr = "COALESCE(COUNT(DISTINCT CASE WHEN p_vote.college = :college THEN v.student_id END), 0)";
+                                                                    } elseif ($campus) {
+                                                                        $voteCountExpr = "COALESCE(COUNT(DISTINCT CASE WHEN p_vote.college_external = :campus THEN v.student_id END), 0)";
+                                                                    } else {
+                                                                        $voteCountExpr = "COALESCE(COUNT(DISTINCT v.student_id), 0)";
                                                                     }
 
-                                                                    // Step 3: Fetch candidates
                                                                     $query = "
-    SELECT 
-    vtr.student_id,
-    c.id AS candidate_id,
-    fn.value AS full_name,
-    st.value AS student_id_text,
-    pic.file_path AS picture,
-    party.value AS partylist,
-    vtr.college,
-    col.college_name,
-    vtr.course,
-    crs.course_name,
-    c.status,
-    pos.value AS position,
+        SELECT 
+            c.id AS candidate_id,
+            fn.value  AS full_name,
+            st.value  AS student_id_text,
+            pic.file_path AS picture,
+            party.value   AS partylist,
+            vtr.college,
+            col.college_name,
+            vtr.course,
+            crs.course_name,
+            c.status,
+            pos.value AS position,
+            $voteCountExpr AS vote_count
 
-    COALESCE(COUNT(DISTINCT CASE 
-        WHEN :campus IS NOT NULL THEN 
-            CASE WHEN p.type = 10 AND p.college_external = :campus_filter THEN v.student_id END
-        ELSE v.student_id 
-    END), 0) AS vote_count
+        FROM candidates c
 
-FROM candidates c
+        LEFT JOIN candidate_responses fn
+            ON fn.candidate_id = c.id AND fn.field_id = :full_name_field_id
 
-LEFT JOIN candidate_responses fn 
-    ON fn.candidate_id = c.id 
-    AND fn.field_id = :full_name_field_id
+        LEFT JOIN candidate_responses st
+            ON st.candidate_id = c.id AND st.field_id = :student_id_field_id
 
-LEFT JOIN candidate_responses st 
-    ON st.candidate_id = c.id 
-    AND st.field_id = :student_id_field_id
+        LEFT JOIN candidate_files pic
+            ON pic.candidate_id = c.id AND pic.field_id = :picture_field_id
 
-LEFT JOIN candidate_files pic 
-    ON pic.candidate_id = c.id 
-    AND pic.field_id = :picture_field_id
+        LEFT JOIN candidate_responses party
+            ON party.candidate_id = c.id AND party.field_id = :party_field_id
 
-LEFT JOIN candidate_responses party 
-    ON party.candidate_id = c.id 
-    AND party.field_id = :party_field_id
+        LEFT JOIN candidate_responses pos
+            ON pos.candidate_id = c.id AND pos.field_id = :position_field_id
 
-LEFT JOIN candidate_responses pos 
-    ON pos.candidate_id = c.id 
-    AND pos.field_id = :position_field_id
+        LEFT JOIN voters vtr
+            ON vtr.student_id = st.value
 
-LEFT JOIN voters vtr 
-    ON vtr.student_id = st.value
+        LEFT JOIN colleges col
+            ON vtr.college = col.college_id
 
-LEFT JOIN colleges col 
-    ON vtr.college = col.college_id
+        LEFT JOIN courses crs
+            ON vtr.course = crs.id
 
-LEFT JOIN courses crs 
-    ON vtr.course = crs.id
+        LEFT JOIN votes v
+            ON v.candidate_id = c.id
+            AND v.voting_period_id = :voting_period_id
 
-LEFT JOIN precinct_voters pv 
-    ON pv.student_id = st.value 
-    AND pv.status = 'verified'
+        LEFT JOIN precincts p_vote
+            ON CAST(p_vote.id AS CHAR) = v.precinct
 
-LEFT JOIN votes v 
-    ON v.candidate_id = c.id 
-    AND v.voting_period_id = :voting_period_id
+        WHERE $where
 
-LEFT JOIN precincts p 
-    ON v.precinct = p.name
+        GROUP BY
+            c.id, fn.value, st.value, pic.file_path, party.value,
+            vtr.college, col.college_name, vtr.course, crs.course_name,
+            c.status, pos.value
 
-WHERE $where
-
-GROUP BY 
-    c.id,
-    fn.value,
-    st.value,
-    pic.file_path,
-    party.value,
-    vtr.college,
-    col.college_name,
-    vtr.course,
-    crs.course_name,
-    c.status,
-    pos.value
-
-ORDER BY vote_count DESC, fn.value ASC
+        ORDER BY vote_count DESC, fn.value ASC
     ";
-
-                                                                    // Add null params if not set to avoid binding errors
-                                                                    if (!isset($params[':campus'])) $params[':campus'] = null;
-                                                                    if (!isset($params[':campus_filter'])) $params[':campus_filter'] = null;
-
 
                                                                     $stmt = $pdo->prepare($query);
                                                                     $stmt->execute($params);
-                                                                    $candidates = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-
-                                                                    if (empty($candidates) && $college) {
-                                                                        error_log("No candidates found for position '$position' in college '$college' for voting_period_id $votingPeriodId");
-                                                                    }
-
-                                                                    return $candidates;
+                                                                    return $stmt->fetchAll(PDO::FETCH_ASSOC);
                                                                 }
 
-
-                                                                $levels = ['Central', 'Local'];
+                                                                // $levels = ['Central', 'Local'];
+                                                                $levels = ['Central'];
+                                                                $positionsToShow = ['Mayor', 'Vice-Mayor', 'Senator', 'Councilor'];
                                                                 ?>
 
-
-
                                                                 <div class="container-fluid py-4">
-                                                                    <!-- Existing Levels (Central, Local, External) -->
+
+                                                                    <!-- CENTRAL & LOCAL POSITIONS -->
                                                                     <?php foreach ($levels as $level): ?>
                                                                         <hr class="my-4">
                                                                         <h2 class="display-5 fw-bold mb-4"><?php echo strtoupper($level); ?> POSITIONS</h2>
 
                                                                         <?php
-                                                                        // Fetch all parties for this election to ensure they all appear in breakdown
                                                                         $stmt = $pdo->prepare("SELECT name FROM parties WHERE election_id = ?");
                                                                         $stmt->execute([$election['id']]);
                                                                         $allParties = $stmt->fetchAll(PDO::FETCH_COLUMN);
@@ -1417,33 +1309,52 @@ ORDER BY vote_count DESC, fn.value ASC
                                                                         <?php endif; ?>
                                                                     <?php endforeach; ?>
 
-                                                                    <!-- Local Election (Per College) -->
+                                                                    <!-- ===================== LOCAL ELECTION (PER COLLEGE) ===================== -->
                                                                     <hr class="my-4">
                                                                     <h2 class="display-5 fw-bold mb-4">LOCAL ELECTION (PER COLLEGE)</h2>
                                                                     <div class="mb-3 d-none">
                                                                         <select id="college-select" class="form-select">
                                                                             <option value="">Select College</option>
-
                                                                             <?php foreach ($colleges as $college): ?>
                                                                                 <option value="<?= htmlspecialchars($college['college_id']) ?>">
                                                                                     <?= htmlspecialchars($college['college_name']) ?>
                                                                                 </option>
                                                                             <?php endforeach; ?>
-
                                                                         </select>
                                                                     </div>
 
                                                                     <div id="college-results">
-                                                                        <?php foreach ($colleges as $college): ?>
+                                                                        <?php foreach ($colleges as $college):
 
-                                                                            <?php
-                                                                            $collegeId = $college['college_id'];
+                                                                            $collegeId   = $college['college_id'];
                                                                             $collegeName = $college['college_name'];
 
+                                                                            // Pre-fetch stats and candidates for this college
                                                                             $stats = getVoterStats($pdo, $votingPeriodId, $collegeId);
-                                                                            ?>
-                                                                            <div class="college-section" data-college="<?php echo htmlspecialchars($collegeId); ?>">
 
+                                                                            // Cache all candidate data per position for this college
+                                                                            $collegeCandidateCache = [];
+                                                                            foreach ($positionsToShow as $_pos) {
+                                                                                $collegeCandidateCache[$_pos] = getCandidatesForPosition(
+                                                                                    $pdo,
+                                                                                    $votingPeriodId,
+                                                                                    $_pos,
+                                                                                    $fullNameFieldId,
+                                                                                    $studentIdFieldId,
+                                                                                    $pictureFieldId,
+                                                                                    $partyFieldId,
+                                                                                    $positionFieldId,
+                                                                                    $collegeId
+                                                                                );
+                                                                            }
+
+                                                                            $hasVoters       = $stats['total'] > 0;
+                                                                            $hasAnyCandidates = !empty(array_filter($collegeCandidateCache, fn($c) => !empty($c)));
+
+                                                                            // *** SKIP colleges with no voters AND no candidates ***
+                                                                            if (!$hasVoters && !$hasAnyCandidates) continue;
+                                                                        ?>
+                                                                            <div class="college-section" data-college="<?php echo htmlspecialchars($collegeId); ?>">
 
                                                                                 <div class="card mb-4 shadow-sm">
                                                                                     <div class="card-body">
@@ -1455,15 +1366,8 @@ ORDER BY vote_count DESC, fn.value ASC
                                                                                 </div>
 
                                                                                 <?php
-                                                                                $positionsToShow = ['Mayor', 'Vice-Mayor', 'Senator', 'Councilor'];
-                                                                                $hasCollegeCandidates = false;
-                                                                                foreach ($positionsToShow as $position):
-                                                                                    $candidates = getCandidatesForPosition($pdo, $votingPeriodId, $position, $fullNameFieldId, $studentIdFieldId, $pictureFieldId, $partyFieldId, $positionFieldId, $collegeId);
-                                                                                    if (!empty($candidates)) {
-                                                                                        $hasCollegeCandidates = true;
-                                                                                        break;
-                                                                                    }
-                                                                                endforeach;
+                                                                                // Use the cached data to check if ANY position has candidates
+                                                                                $hasCollegeCandidates = $hasAnyCandidates;
                                                                                 ?>
 
                                                                                 <?php if ($hasCollegeCandidates): ?>
@@ -1472,7 +1376,8 @@ ORDER BY vote_count DESC, fn.value ASC
                                                                                             <h3 class="card-title h4">Winning Candidates</h3>
                                                                                             <div class="row row-cols-1 row-cols-md-2 g-3">
                                                                                                 <?php foreach ($positionsToShow as $position):
-                                                                                                    $candidates = getCandidatesForPosition($pdo, $votingPeriodId, $position, $fullNameFieldId, $studentIdFieldId, $pictureFieldId, $partyFieldId, $positionFieldId, $collegeId);
+                                                                                                    // Use cached data — no extra DB call
+                                                                                                    $candidates = $collegeCandidateCache[$position] ?? [];
                                                                                                     if (empty($candidates)) continue;
                                                                                                     $maxVotes = max(array_column($candidates, 'vote_count'));
                                                                                                     $topCandidates = array_filter($candidates, fn($c) => $c['vote_count'] === $maxVotes);
@@ -1491,7 +1396,8 @@ ORDER BY vote_count DESC, fn.value ASC
                                                                                     </div>
 
                                                                                     <?php foreach ($positionsToShow as $position):
-                                                                                        $candidates = getCandidatesForPosition($pdo, $votingPeriodId, $position, $fullNameFieldId, $studentIdFieldId, $pictureFieldId, $partyFieldId, $positionFieldId, $collegeId);
+                                                                                        // Use cached data — no extra DB call
+                                                                                        $candidates = $collegeCandidateCache[$position] ?? [];
                                                                                         if (empty($candidates)) continue;
 
                                                                                         $partyVotes = [];
@@ -1599,19 +1505,13 @@ ORDER BY vote_count DESC, fn.value ASC
                                                                         <?php endforeach; ?>
                                                                     </div>
 
-                                                                    <!-- ESU Campuses -->
+                                                                    <!-- ===================== ESU CAMPUSES ===================== -->
                                                                     <hr class="my-4">
                                                                     <h2 class="display-5 fw-bold mb-4">ESU CAMPUSES</h2>
                                                                     <div class="mb-3">
                                                                         <select id="campus-select" class="form-select">
                                                                             <option value="">Select Campus</option>
                                                                             <?php foreach ($esu_campuses as $c): ?>
-
-                                                                                <?php
-                                                                                $campusId = $c['campus_id'];
-                                                                                $campusName = $c['campus_name'];
-                                                                                ?>
-
                                                                                 <option value="<?= $c['campus_id'] ?>">
                                                                                     <?= htmlspecialchars($c['campus_name']) ?>
                                                                                 </option>
@@ -1620,15 +1520,15 @@ ORDER BY vote_count DESC, fn.value ASC
                                                                     </div>
 
                                                                     <div id="campus-results" class="d-none">
-                                                                        <?php foreach ($esu_campuses as $c): ?>
-
-                                                                            <div class="campus-section" data-campus="<?php echo htmlspecialchars($c['campus_id']); ?>">
-                                                                                <?php $stats = getVoterStats($pdo, $votingPeriodId, null, $c['campus_id']);
-
-                                                                                ?>
+                                                                        <?php foreach ($esu_campuses as $c):
+                                                                            $campusId   = $c['campus_id'];
+                                                                            $campusName = $c['campus_name'];
+                                                                            $stats = getVoterStats($pdo, $votingPeriodId, null, $campusId);
+                                                                        ?>
+                                                                            <div class="campus-section" data-campus="<?php echo htmlspecialchars($campusId); ?>">
                                                                                 <div class="card mb-4 shadow-sm">
                                                                                     <div class="card-body">
-                                                                                        <h3 class="card-title h4"><?php echo htmlspecialchars($c['campus_name']); ?> Voter Stats</h3>
+                                                                                        <h3 class="card-title h4"><?php echo htmlspecialchars($campusName); ?> Voter Stats</h3>
                                                                                         <p>Total Verified Voters: <strong><?php echo number_format($stats['total']); ?></strong></p>
                                                                                         <p>Voted: <strong><?php echo number_format($stats['voted']); ?></strong></p>
                                                                                         <p>Did Not Vote: <strong><?php echo number_format($stats['total'] - $stats['voted']); ?></strong></p>
@@ -1638,7 +1538,7 @@ ORDER BY vote_count DESC, fn.value ASC
                                                                                 <?php
                                                                                 $hasCampusCandidates = false;
                                                                                 foreach ($positionsToShow as $position):
-                                                                                    $candidates = getCandidatesForPosition($pdo, $votingPeriodId, $position, $fullNameFieldId, $studentIdFieldId, $pictureFieldId, $partyFieldId, $positionFieldId, null,  $campusId);
+                                                                                    $candidates = getCandidatesForPosition($pdo, $votingPeriodId, $position, $fullNameFieldId, $studentIdFieldId, $pictureFieldId, $partyFieldId, $positionFieldId, null, $campusId);
                                                                                     if (!empty($candidates)) {
                                                                                         $hasCampusCandidates = true;
                                                                                         break;
@@ -1652,7 +1552,7 @@ ORDER BY vote_count DESC, fn.value ASC
                                                                                             <h3 class="card-title h4">Winning Candidates</h3>
                                                                                             <div class="row row-cols-1 row-cols-md-2 g-3">
                                                                                                 <?php foreach ($positionsToShow as $position):
-                                                                                                    $candidates = getCandidatesForPosition($pdo, $votingPeriodId, $position, $fullNameFieldId, $studentIdFieldId, $pictureFieldId, $partyFieldId, $positionFieldId, null,  $campusId);
+                                                                                                    $candidates = getCandidatesForPosition($pdo, $votingPeriodId, $position, $fullNameFieldId, $studentIdFieldId, $pictureFieldId, $partyFieldId, $positionFieldId, null, $campusId);
                                                                                                     if (empty($candidates)) continue;
                                                                                                     $maxVotes = max(array_column($candidates, 'vote_count'));
                                                                                                     $topCandidates = array_filter($candidates, fn($c) => $c['vote_count'] === $maxVotes);
@@ -1671,7 +1571,7 @@ ORDER BY vote_count DESC, fn.value ASC
                                                                                     </div>
 
                                                                                     <?php foreach ($positionsToShow as $position):
-                                                                                        $candidates = getCandidatesForPosition($pdo, $votingPeriodId, $position, $fullNameFieldId, $studentIdFieldId, $pictureFieldId, $partyFieldId, $positionFieldId, null,  $campusId);
+                                                                                        $candidates = getCandidatesForPosition($pdo, $votingPeriodId, $position, $fullNameFieldId, $studentIdFieldId, $pictureFieldId, $partyFieldId, $positionFieldId, null, $campusId);
                                                                                         if (empty($candidates)) continue;
 
                                                                                         $partyVotes = [];
@@ -1788,9 +1688,6 @@ ORDER BY vote_count DESC, fn.value ASC
                                                                         sections.forEach(section => {
                                                                             const sectionCampus = section.dataset.campus.trim();
                                                                             section.style.display = sectionCampus === selected ? 'block' : 'none';
-                                                                            if (sectionCampus === selected && section.querySelector('.alert-warning')) {
-                                                                                console.log(`No candidates found for campus: ${selected}`);
-                                                                            }
                                                                         });
                                                                         results.classList.toggle('d-none', !selected);
                                                                         console.log(`Selected campus: ${selected}`);
@@ -1804,21 +1701,23 @@ ORDER BY vote_count DESC, fn.value ASC
                                             </div>
                                         </div>
                                     </div>
-                                    <!-- page-body-wrapper ends -->
                                 </div>
-                                <!-- container-scroller -->
+                            </div>
+                        </div>
+                    </div>
+                    <!-- page-body-wrapper ends -->
+                </div>
+                <!-- container-scroller -->
 
-                                <script>
-                                    $(document).ready(function() {
-                                        // Global variable for voting period ID
-                                        let votingPeriodId = '<?php echo $voting_period_id ?>'; // PHP-injected voting_period_id
-                                        if (!votingPeriodId) {
-                                            alert('Voting period ID is missing');
-                                            return;
-                                        }
-
-                                    });
-                                </script>
+                <script>
+                    $(document).ready(function() {
+                        let votingPeriodId = '<?php echo $voting_period_id ?>';
+                        if (!votingPeriodId) {
+                            alert('Voting period ID is missing');
+                            return;
+                        }
+                    });
+                </script>
     </body>
 
     <?php if (isset($_SESSION['STATUS'])): ?>
@@ -1834,8 +1733,6 @@ ORDER BY vote_count DESC, fn.value ASC
         <?php unset($_SESSION['STATUS']); ?>
     <?php endif; ?>
 
-
-
     <!-- Public Revote Reschedule Modal -->
     <div class="modal fade" id="publicRevoteModal" tabindex="-1" aria-labelledby="publicRevoteModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -1846,22 +1743,17 @@ ORDER BY vote_count DESC, fn.value ASC
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-
                         <div class="mb-3">
                             <label for="start_date" class="form-label">Start Date & Time</label>
                             <input type="datetime-local" class="form-control" id="start_date" name="start_date" required
                                 value="<?php echo date('Y-m-d\TH:i'); ?>">
-
                         </div>
-
                         <div class="mb-3">
                             <label for="end_date" class="form-label">End Date & Time</label>
                             <input type="datetime-local" class="form-control" id="end_date" name="end_date" required>
                         </div>
-
                         <input type="hidden" id="rescheduleVotingPeriodId" name="voting_period_id" value="<?php echo $_GET['voting_period_id'] ?>">
                         <input type="hidden" id="rescheduleTiedPositions" name="positions">
-
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-success">Reschedule</button>
@@ -1887,13 +1779,10 @@ ORDER BY vote_count DESC, fn.value ASC
                 pad(now.getMinutes());
 
             const startDateInput = document.getElementById('start_date');
-            if (startDateInput) {
-                startDateInput.min = formattedDateTime;
-            }
+            if (startDateInput) startDateInput.min = formattedDateTime;
+
             const endDateInput = document.getElementById('end_date');
-            if (endDateInput) {
-                endDateInput.min = formattedDateTime;
-            }
+            if (endDateInput) endDateInput.min = formattedDateTime;
         });
     </script>
 
