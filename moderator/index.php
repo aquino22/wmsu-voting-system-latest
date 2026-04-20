@@ -465,15 +465,16 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'moderator') {
                           $stmt->execute([$precinct['id']]);
                           $voter_count = (int)$stmt->fetchColumn();
 
+
                           // Votes cast in this voting period & precinct
                           $stmt = $pdo->prepare("
-            SELECT COUNT(*)
-            FROM votes v
-            JOIN precinct_voters pv 
-                ON v.student_id = pv.student_id
-            WHERE pv.precinct = ?
-              AND v.voting_period_id = ?
-        ");
+    SELECT COUNT(DISTINCT v.student_id)
+    FROM votes v
+    JOIN precinct_voters pv 
+        ON v.student_id = pv.student_id
+    WHERE pv.precinct = ?
+      AND v.voting_period_id = ?
+");
                           $stmt->execute([
                             $precinct['id'],
                             $voting_period_id

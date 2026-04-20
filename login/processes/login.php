@@ -47,15 +47,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // --- RATE LIMITING CHECK ---
-    $ip_address = $_SERVER['REMOTE_ADDR'];
-    $checkLimit = $pdo->prepare("SELECT COUNT(*) FROM login_attempts WHERE (ip_address = ? OR email = ?) AND attempt_time > (NOW() - INTERVAL 15 MINUTE)");
-    $checkLimit->execute([$ip_address, $email]);
-    if ($checkLimit->fetchColumn() >= 5) {
-        $_SESSION['error'] = "Too many failed login attempts. Please try again in 15 minutes.";
-        header("Location: ../index.php");
-        exit();
-    }
+    // // --- RATE LIMITING CHECK ---
+    // $ip_address = $_SERVER['REMOTE_ADDR'];
+    // $checkLimit = $pdo->prepare("SELECT COUNT(*) FROM login_attempts WHERE (ip_address = ? OR email = ?) AND attempt_time > (NOW() - INTERVAL 15 MINUTE)");
+    // $checkLimit->execute([$ip_address, $email]);
+    // if ($checkLimit->fetchColumn() >= 5) {
+    //     $_SESSION['error'] = "Too many failed login attempts. Please try again in 15 minutes.";
+    //     header("Location: ../index.php");
+    //     exit();
+    // }
     // ---------------------------
 
     try {

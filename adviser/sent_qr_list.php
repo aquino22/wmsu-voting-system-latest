@@ -211,11 +211,8 @@ LEFT JOIN email_role_log erl
 LEFT JOIN qr_sending_log qsl
     ON v.student_id = qsl.student_id
  
-LEFT JOIN voting_periods vp
-    ON qsl.election_id = vp.id
-
 LEFT JOIN elections e
-    ON vp.election_id = e.id
+    ON qsl.election_id = e.id
  
 WHERE v.college     = ?
   AND v.department  = ?
@@ -533,7 +530,6 @@ $sentLogs = $voters;
                                                                                     <?php
                                                                                     $rawDetails = $log['email_details'] ?? '';
                                                                                     if (!empty(trim($rawDetails))) {
-
                                                                                         $entries = explode('||', $rawDetails);
                                                                                         foreach ($entries as $entry) {
                                                                                             $entry = trim($entry);

@@ -27,15 +27,15 @@ $semester = trim($_POST['semester']);
 
 
 // --- RATE LIMITING CHECK ---
-$ip_address = $_SERVER['REMOTE_ADDR'];
-$checkRegLimit = $pdo->prepare("SELECT COUNT(*) FROM registration_attempts WHERE ip_address = ? AND registration_time > (NOW() - INTERVAL 1 HOUR)");
-$checkRegLimit->execute([$ip_address]);
-if ($checkRegLimit->fetchColumn() >= 3) {
-    $_SESSION['STATUS'] = 'error';
-    $_SESSION['MESSAGE'] = 'Too many accounts created from this IP address. Please try again later.';
-    header("Location: ../register_custom.php");
-    exit();
-}
+// $ip_address = $_SERVER['REMOTE_ADDR'];
+// $checkRegLimit = $pdo->prepare("SELECT COUNT(*) FROM registration_attempts WHERE ip_address = ? AND registration_time > (NOW() - INTERVAL 1 HOUR)");
+// $checkRegLimit->execute([$ip_address]);
+// if ($checkRegLimit->fetchColumn() >= 3) {
+//     $_SESSION['STATUS'] = 'error';
+//     $_SESSION['MESSAGE'] = 'Too many accounts created from this IP address. Please try again later.';
+//     header("Location: ../register_custom.php");
+//     exit();
+// }
 // ---------------------------
 
 $stmt = $pdo->prepare("SELECT  id FROM academic_years WHERE status = 'Ongoing' LIMIT 1");

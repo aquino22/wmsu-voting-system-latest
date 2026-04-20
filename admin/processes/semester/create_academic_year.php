@@ -991,6 +991,12 @@ function archivePrecincts($pdo, $archivePdo, $election_id, $voting_period_id)
     $pvStmt->execute($precinctIds);
     $precinctVoters = $pvStmt->fetchAll(PDO::FETCH_ASSOC);
 
+    $pdo->prepare("
+    UPDATE moderators
+    SET precinct = NULL
+    WHERE precinct IN ($placeholders)
+")->execute($precinctIds);
+
     foreach ($precinctVoters as $pv) {
         $archivePdo->prepare("
             INSERT INTO archived_precinct_voters

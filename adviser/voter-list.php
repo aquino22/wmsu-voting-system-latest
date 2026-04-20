@@ -242,7 +242,7 @@ SELECT
 FROM voting_periods vp
 JOIN elections e 
     ON vp.election_id = e.id
-WHERE vp.status IN ('Ongoing')
+WHERE vp.status IN ('Ongoing', 'Scheduled')
 ORDER BY vp.start_period ASC;
 
 ");
@@ -258,6 +258,8 @@ ORDER BY vp.start_period ASC;
 
     $startTime = strtotime($vp['start_period']);
     $twoHoursBefore = $startTime - (2 * 60 * 60);
+
+
     // TRUE if 2 hours before start → until start
     $canSendQr[$vp['id']] = ($now >= $twoHoursBefore && $now <= $startTime);
   }
